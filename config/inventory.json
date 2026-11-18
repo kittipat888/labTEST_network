@@ -1,0 +1,12 @@
+{
+  "R1": {
+    "management_ip": "192.168.149.50",
+    "management_interface": "FastEthernet0/0",
+    "data_interfaces": ["FastEthernet1/0", "FastEthernet1/1"]
+  },
+  "R2": {
+    "management_ip": "192.168.149.51",
+    "management_interface": "FastEthernet0/0",
+    "data_interfaces": ["FastEthernet1/0", "FastEthernet1/1"]
+  }
+}

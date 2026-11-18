@@ -1,0 +1,9 @@
+# ไม่เอาไฟล์เก็บความลับขึ้น Git
+.env
+secrets/
+*.sqlite3
+
+# ไม่เอาไฟล์ขยะของ Python ขึ้น Git
+__pycache__/
+*.py[cod]
+.pytest_cache/

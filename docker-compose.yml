@@ -1,0 +1,62 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  backend:
+    build: ./backend
+    ports:
+      - "8001:8000"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      LAB_ADMIN_TOKEN: ${LAB_ADMIN_TOKEN:-admin123}
+      LAB_WORKER_TOKEN: ${LAB_WORKER_TOKEN:-worker123}
+      LAB_DEPLOY_ENABLED: ${LAB_DEPLOY_ENABLED:-true}
+      OLLAMA_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./config:/app/config:ro
+    depends_on:
+      - kafka
+
+  worker:
+    build: ./worker
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      BACKEND_URL: http://backend:8000
+      ROUTER_SSH_USERNAME: ${ROUTER_SSH_USERNAME:-kono}
+    volumes:
+      - ./config:/app/config:ro
+    secrets:
+      - router_ssh_password
+    depends_on:
+      - backend
+      - kafka
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8002:80"
+    depends_on:
+      - backend
+
+secrets:
+  router_ssh_password:
+    file: ./secrets/router_ssh_password
